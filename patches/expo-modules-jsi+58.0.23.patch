@@ -1,0 +1,24 @@
+diff --git a/node_modules/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/Values/JavaScriptObject.swift b/node_modules/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/Values/JavaScriptObject.swift
+index de76b97..77be1f4 100644
+--- a/node_modules/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/Values/JavaScriptObject.swift
++++ b/node_modules/expo-modules-jsi/apple/Sources/ExpoModulesJSI/Runtime/Values/JavaScriptObject.swift
+@@ -941,11 +941,18 @@ private func withEncodedValue(
+     }
+     // The runtime can't be deallocated during a call on its JavaScript thread, so it's borrowed without
+     // a retain.
++    // Box the pointer so Swift 6.2 (Xcode 26) region isolation accepts sending it
++    // into the isolated closure; the closure runs synchronously on this thread.
++    let box = _EncodedValueSlotBox(pointer: slot)
+     try runtime._withUnsafeGuaranteedRef { runtime in
+       try JavaScriptActor.assumeIsolated {
+-        try encode(JavaScriptValue.Slot(slot), runtime)
++        try encode(JavaScriptValue.Slot(box.pointer), runtime)
+       }
+     }
+     body(slot.pointee)
+   }
+ }
++
++private struct _EncodedValueSlotBox: @unchecked Sendable {
++  let pointer: UnsafeMutablePointer<facebook.jsi.Value>
++}

@@ -1,22 +1,47 @@
 {
-  "name": "colordrop",
+  "name": "droplio",
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~58.0.26",
+    "expo-asset": "~58.0.21",
+    "expo-audio": "~58.0.12",
+    "expo-constants": "~58.0.16",
+    "expo-font": "~58.0.12",
+    "expo-gl": "~58.0.4",
+    "expo-haptics": "~58.0.8",
+    "expo-linear-gradient": "~58.0.4",
+    "expo-splash-screen": "~58.0.14",
     "expo-status-bar": "~58.0.5",
     "react": "19.3.0",
-    "react-native": "0.88.1"
+    "react-native": "0.88.1",
+    "react-native-google-mobile-ads": "^17.4.0",
+    "react-native-safe-area-context": "~5.11.1",
+    "three": "^0.170.0"
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
+    "@types/three": "^0.170.0",
+    "patch-package": "^8.0.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "levels": "python3 tools/generate_levels.py",
+    "levels:check": "python3 tools/generate_levels.py --check",
+    "audio": "python3 tools/generate_audio.py",
+    "typecheck": "tsc --noEmit",
+    "playtest": "tsc --ignoreConfig --outDir .playtest --rootDir . --module commonjs --target es2020 --resolveJsonModule --esModuleInterop --skipLibCheck src/game/GameEngine.ts && cp src/data/levels.json .playtest/src/data/ && node tools/bot_playtest.js",
+    "logo": "python3 tools/generate_logo.py",
+    "postinstall": "patch-package"
   },
-  "private": true
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  }
 }
