@@ -6,6 +6,7 @@ import { BALL_SKINS, TRAY_SKINS } from '../data/cosmetics';
 import { LEVEL_COUNT } from '../data/levels';
 import { AudioManager } from '../managers/AudioManager';
 import { Haptics } from '../managers/Haptics';
+import { dailyStatus, dayKey } from '../managers/DailyReward';
 import { defaultSave, loadSave, resetSave, writeSave, type SaveData } from '../managers/SaveManager';
 
 interface Store {
@@ -18,6 +19,8 @@ interface Store {
   buySkin: (kind: 'ball' | 'tray', id: string) => boolean;
   selectSkin: (kind: 'ball' | 'tray', id: string) => void;
   markIntroSeen: (key: string) => void;
+  /** claim today's daily reward; returns coins granted (0 if already claimed) */
+  claimDaily: (multiplier?: number) => number;
   resetProgress: () => Promise<void>;
 }
 
@@ -102,6 +105,17 @@ export function GameStoreProvider({ children }: { children: React.ReactNode }) {
     [update],
   );
 
+  const claimDaily = useCallback(
+    (multiplier = 1) => {
+      const st = dailyStatus(ref.current);
+      if (!st.available) return 0;
+      const coins = st.coins * multiplier;
+      update((p) => ({ ...p, coins: p.coins + coins, dailyLastDay: dayKey(new Date()), dailyStreak: st.day }));
+      return coins;
+    },
+    [update],
+  );
+
   const resetProgress = useCallback(async () => {
     const d = await resetSave();
     ref.current = d;
@@ -109,8 +123,8 @@ export function GameStoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ save, ready, update, recordWin, addCoins, buySkin, selectSkin, markIntroSeen, resetProgress }),
-    [save, ready, update, recordWin, addCoins, buySkin, selectSkin, markIntroSeen, resetProgress],
+    () => ({ save, ready, update, recordWin, addCoins, buySkin, selectSkin, markIntroSeen, claimDaily, resetProgress }),
+    [save, ready, update, recordWin, addCoins, buySkin, selectSkin, markIntroSeen, claimDaily, resetProgress],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

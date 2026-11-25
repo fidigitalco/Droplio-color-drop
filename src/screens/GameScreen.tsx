@@ -41,6 +41,8 @@ interface Result {
   bonus: boolean;
   reward: RewardBreakdown;
   doubled: boolean;
+  /** best score on this level before this win (0 = never cleared) */
+  prevBest: number;
 }
 
 const HUD_H = 104;
@@ -135,6 +137,25 @@ function ReadyBanner({ bonus }: { bonus: string }) {
         <Text style={styles.readySub}>★ Bonus: {bonus}</Text>
       </Animated.View>
     </View>
+  );
+}
+
+/** "NEW BEST!" ribbon on the victory panel when the player beats their record. */
+function NewBestBadge() {
+  const a = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const t = setTimeout(() => {
+      AudioManager.play('star');
+      Haptics.success();
+      Animated.spring(a, { toValue: 1, useNativeDriver: true, speed: 10, bounciness: 16 }).start();
+    }, 950); // after the score has counted up
+    return () => clearTimeout(t);
+  }, [a]);
+  return (
+    <Animated.View style={[styles.newBest, { opacity: a, transform: [{ scale: a.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) }, { rotate: '-4deg' }] }]}>
+      <Ionicons name="trophy" size={18} color="#fff" />
+      <Text style={styles.newBestText}>NEW BEST!</Text>
+    </Animated.View>
   );
 }
 
@@ -286,9 +307,10 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
     const stars = eng.stars();
     const bonus = eng.bonusAchieved();
     const first = !st.save.stars[String(id)];
+    const prevBest = st.save.bestScores[String(id)] ?? 0;
     const reward = computeReward(eng.level, { stars, score: eng.score, bonusAchieved: bonus, pickedCoins: eng.coinsEarned }, first);
     st.recordWin(id, stars, eng.score, reward.total);
-    setResult({ stars, score: eng.score, bonus, reward, doubled: false });
+    setResult({ stars, score: eng.score, bonus, reward, doubled: false, prevBest });
     setOverlay('won');
     AudioManager.play('win');
     Haptics.success();
@@ -601,6 +623,11 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
             <Text style={ui.title}>Level Complete!</Text>
             <VictoryStars count={result.stars} />
             <CountUp to={result.score} style={styles.bigScore} />
+            {result.prevBest > 0 && result.score > result.prevBest ? (
+              <NewBestBadge />
+            ) : result.prevBest > 0 ? (
+              <Text style={styles.bestText}>Best: {result.prevBest.toLocaleString()}</Text>
+            ) : null}
             <View style={styles.bonusRow}>
               <Ionicons name={result.bonus ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={result.bonus ? UI.green : UI.inkSoft} />
               <Text style={styles.bonusText}>
@@ -681,6 +708,9 @@ const styles = StyleSheet.create({
   readySub: { marginTop: 6, fontSize: 16, fontWeight: '900', color: UI.ink, backgroundColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 14, overflow: 'hidden' },
   fullBtn: { alignSelf: 'stretch', marginTop: 10 },
   iconRow: { flexDirection: 'row', justifyContent: 'center', gap: 14, marginTop: 16 },
+  newBest: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ff7a2f', paddingHorizontal: 14, paddingVertical: 5, borderRadius: 16, marginTop: 2, gap: 6, shadowColor: '#c2410c', shadowOpacity: 0.35, shadowRadius: 0, shadowOffset: { width: 0, height: 3 } },
+  newBestText: { color: '#fff', fontWeight: '900', fontSize: 16, letterSpacing: 1 },
+  bestText: { fontWeight: '800', color: UI.inkSoft, fontSize: 14, marginTop: 2 },
   bigScore: { fontSize: 40, fontWeight: '900', color: UI.ink },
   bonusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
   bonusText: { marginLeft: 6, fontWeight: '800', color: UI.inkSoft, fontSize: 15 },

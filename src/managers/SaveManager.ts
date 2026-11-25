@@ -29,6 +29,9 @@ export interface SaveData {
   seenIntros: string[];
   /** ad pacing (kept in the save so app restarts can't be used to dodge the cap) */
   levelsSinceInterstitial: number;
+  /** daily reward: last claimed local day (YYYY-MM-DD, '' = never) and streak 1..7 */
+  dailyLastDay: string;
+  dailyStreak: number;
 }
 
 export function defaultSave(): SaveData {
@@ -48,6 +51,8 @@ export function defaultSave(): SaveData {
     tutorialDone: false,
     seenIntros: [],
     levelsSinceInterstitial: 0,
+    dailyLastDay: '',
+    dailyStreak: 0,
   };
 }
 
@@ -87,6 +92,8 @@ export function sanitize(input: unknown): SaveData {
     tutorialDone: bool(s.tutorialDone, d.tutorialDone),
     seenIntros: strArr(s.seenIntros, []),
     levelsSinceInterstitial: Math.round(num(s.levelsSinceInterstitial, 0, 0, 100)),
+    dailyLastDay: typeof s.dailyLastDay === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s.dailyLastDay) ? s.dailyLastDay : '',
+    dailyStreak: Math.round(num(s.dailyStreak, 0, 0, 7)),
   };
   if (!out.ownedBallSkins.includes(out.selectedBallSkin)) out.selectedBallSkin = 'classic';
   if (!out.ownedTraySkins.includes(out.selectedTraySkin)) out.selectedTraySkin = 'classic';

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GLScene } from '../components/GLScene';
+import { DailyRewardModal } from '../components/DailyRewardModal';
 import { SettingsModal } from '../components/SettingsModal';
 import { CoinPill, GameButton, IconButton, Logo } from '../components/ui';
 import { ballSkin, UI } from '../data/cosmetics';
 import { LEVEL_COUNT, worldOf } from '../data/levels';
 import { HomeScene } from '../game/three/HomeScene';
+import { dailyStatus, type DailyStatus } from '../managers/DailyReward';
 import { useGameStore } from '../store/GameStore';
 
 export function HomeScreen({
@@ -22,6 +24,14 @@ export function HomeScreen({
   const { width } = useWindowDimensions();
   const { save } = useGameStore();
   const [settings, setSettings] = useState(false);
+  // daily reward: offered once when the home screen opens on a new day
+  const [daily, setDaily] = useState<DailyStatus | null>(null);
+  useEffect(() => {
+    const st = dailyStatus(save);
+    if (st.available) setDaily(st);
+    // only on mount: the popup closes itself after claiming
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const skin = ballSkin(save.selectedBallSkin);
   const allDone = Object.keys(save.stars).length >= LEVEL_COUNT;
   const level = save.unlockedLevel;
@@ -63,6 +73,7 @@ export function HomeScreen({
       </View>
 
       {settings && <SettingsModal onClose={() => setSettings(false)} />}
+      {daily && !settings && <DailyRewardModal status={daily} onClose={() => setDaily(null)} />}
     </View>
   );
 }
