@@ -18,7 +18,7 @@
  */
 import { Platform } from 'react-native';
 import type * as GMA from 'react-native-google-mobile-ads';
-import { PRODUCTION_AD_UNITS, USE_PRODUCTION_ADS } from '../../config/ads';
+import { AD_POLICY, PRODUCTION_AD_UNITS, USE_PRODUCTION_ADS } from '../../config/ads';
 import type { AdProvider } from './AdProvider';
 
 type Lib = typeof GMA;
@@ -81,7 +81,8 @@ export class AdMobProvider implements AdProvider {
       return;
     }
     this.loadRewarded();
-    this.loadInterstitial();
+    // no point requesting interstitials that are never shown
+    if (AD_POLICY.interstitialsEnabled) this.loadInterstitial();
   }
 
   // ---------------------------------------------------------------- rewarded

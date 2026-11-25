@@ -65,6 +65,7 @@ class AdManagerImpl {
    */
   interstitialDue(levelId: number, levelsSince: number): boolean {
     const now = Date.now();
+    if (!AD_POLICY.interstitialsEnabled) return false;
     if (levelId <= AD_POLICY.noInterstitialUpToLevel) return false;
     if (levelsSince < AD_POLICY.levelsBetweenInterstitials) return false;
     if (now - this.launchedAt < AD_POLICY.launchGraceSec * 1000) return false;

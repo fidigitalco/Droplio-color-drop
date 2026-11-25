@@ -25,12 +25,13 @@ export const USE_PRODUCTION_ADS = true;
 
 export const PRODUCTION_AD_UNITS = {
   ios: {
-    rewarded: 'ca-app-pub-2895326830651551/2345954434',
-    interstitial: 'ca-app-pub-2895326830651551/8775757721',
+    rewarded: 'ca-app-pub-2161868508556527/9019392198',
+    // interstitials are disabled (AD_POLICY); placeholder falls back to test units
+    interstitial: 'ca-app-pub-XXXXXXXXXXXXXXXX/INTERSTITIAL_UNUSED',
   },
   android: {
-    rewarded: 'ca-app-pub-2895326830651551/3020421054',
-    interstitial: 'ca-app-pub-2895326830651551/4540999241',
+    rewarded: 'ca-app-pub-2161868508556527/8213358780',
+    interstitial: 'ca-app-pub-XXXXXXXXXXXXXXXX/INTERSTITIAL_UNUSED',
   },
 };
 
@@ -41,6 +42,11 @@ export const PRODUCTION_AD_UNITS = {
  * Tune these numbers freely.
  */
 export const AD_POLICY = {
+  /**
+   * Interstitials are OFF: the game only shows rewarded ads the player chooses
+   * to watch (+1 life, double coins). Set true to bring them back.
+   */
+  interstitialsEnabled: false,
   /** no interstitials while the player is on levels 1..3 */
   noInterstitialUpToLevel: 3,
   /** one interstitial per this many finished levels (wins + losses) */
