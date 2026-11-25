@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Droplio feature graphic</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&family=Nunito:wght@900&display=block" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1024px; height: 500px; overflow: hidden; }
+  #root { position: relative; width: 1024px; height: 500px; overflow: hidden; font-family: 'Nunito', sans-serif;
+          background: linear-gradient(160deg, #6fc0ff 0%, #a88bff 55%, #ff9fcf 100%); }
+  .bokeh { position: absolute; border-radius: 50%; filter: blur(30px); opacity: .5; }
+  .left { position: absolute; left: 56px; top: 0; bottom: 0; width: 520px; display: flex; flex-direction: column; justify-content: center; }
+  .logo { width: 470px; filter: drop-shadow(0 8px 0 rgba(43,35,80,.18)); }
+  .tag { margin-top: 18px; font-family: 'Fredoka', sans-serif; font-size: 50px; line-height: 1.05; color: #fff; text-shadow: 0 5px 0 rgba(43,35,80,.35); }
+  .tag b { color: #ffd84a; font-weight: 700; }
+  .pills { margin-top: 20px; display: flex; gap: 10px; }
+  .pill { background: rgba(255,255,255,.92); color: #2b2350; font-weight: 900; font-size: 20px; padding: 8px 18px; border-radius: 30px; box-shadow: 0 5px 0 rgba(43,35,80,.14); }
+  .card { position: absolute; right: 48px; top: 34px; width: 330px; height: 432px; border-radius: 40px; overflow: hidden; transform: rotate(4deg);
+          border: 8px solid #fff; box-shadow: 0 26px 50px rgba(43,35,80,.35); }
+  .card .vp { position: absolute; left: 0; width: 393px; height: 852px; transform-origin: 0 0; }
+  .card canvas { width: 393px; height: 852px; }
+  .deco { position: absolute; filter: drop-shadow(0 14px 18px rgba(43,35,80,.3)); }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="bokeh" style="left:-60px;top:-80px;width:280px;height:280px;background:#fff"></div>
+  <div class="bokeh" style="left:520px;top:340px;width:260px;height:260px;background:#ffe3f1"></div>
+  <div class="left">
+    <img class="logo" src="../../assets/logo.png">
+    <div class="tag">Catch every <b>color!</b></div>
+    <div class="pills"><div class="pill">300 levels</div><div class="pill">One finger</div><div class="pill">Offline</div></div>
+  </div>
+  <div class="card"><div class="vp" id="vp"></div></div>
+</div>
+<script src=".build/bundle.js"></script>
+<script>
+  // real game frame, cropped to the busy part of the field
+  const vp = document.getElementById('vp');
+  const cv = document.createElement('canvas');
+  cv.width = 1179; cv.height = 2556;
+  vp.appendChild(cv);
+  const h = renderGame(cv, { levelId: 120, seconds: 18, minVisible: 4, viewW: 393, viewH: 852, safeTop: 54, safeBottom: 20, hudH: 104 });
+  const scale = 330 / 393 * 1.5;
+  const offY = -(h.trayPt.y + 45) * scale + 432;
+  const offX = -(h.trayPt.x * scale) + 157;
+  vp.style.transform = `translate(${offX}px, ${offY}px) scale(${scale})`;
+  const root = document.getElementById('root');
+  [[612, 40, 70, '#ffc812'], [600, 380, 84, '#ff3b5c'], [990, 250, 64, '#2f7bff']].forEach(([x, y, s, c]) =>
+    root.insertAdjacentHTML('beforeend', `<img class="deco" src="${ballURL(c, 'glossy')}" style="left:${x - s / 2}px;top:${y - s / 2}px;width:${s}px;height:${s}px">`));
+</script>
+</body>
+</html>

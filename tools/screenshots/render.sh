@@ -10,7 +10,7 @@ CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 npx --yes esbuild@0.24.0 entry.ts --bundle --format=iife --outfile=.build/bundle.js --log-level=error
 
-declare -a SIZES=("iPhone-6.9in_1320x2868" "iPhone-6.5in_1284x2778" "iPhone-6.3in_1206x2622" "iPhone-6.1in_1179x2556")
+declare -a SIZES=("iPhone-6.9in_1320x2868" "iPhone-6.5in_1284x2778" "iPhone-6.3in_1206x2622" "iPhone-6.1in_1179x2556" "GooglePlay-phone_1080x1920")
 ONLY_SIZE=$1; shift || true
 SHOTS=${*:-1 2 3 4 5 6}
 

@@ -132,7 +132,10 @@ root.insertAdjacentHTML('beforeend', `<div class="head"><div class="h1">${S.h}</
 
 const PHONE_TOP = 700;
 const SCR_W = 940, SCR_H = Math.round(940 * 852 / 393);
-root.insertAdjacentHTML('beforeend', `<div class="phone" style="top:${PHONE_TOP}px"><div class="screen" style="height:${SCR_H}px"><div class="island"></div><div class="vp" id="vp" style="transform:scale(${SCR_W / 393})"></div></div></div>`);
+// shorter canvases (e.g. Google Play 9:16) shrink the phone so it still fits whole
+const PHONE_H = SCR_H + 44;
+const ps = Math.min(1, (DH - PHONE_TOP - 50) / PHONE_H);
+root.insertAdjacentHTML('beforeend', `<div class="phone" style="top:${PHONE_TOP}px;transform:translateX(-50%) scale(${ps});transform-origin:50% 0"><div class="screen" style="height:${SCR_H}px"><div class="island"></div><div class="vp" id="vp" style="transform:scale(${SCR_W / 393})"></div></div></div>`);
 const vp = document.getElementById('vp');
 
 function hudHTML(h) {
