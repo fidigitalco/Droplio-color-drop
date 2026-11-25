@@ -152,6 +152,11 @@ export class GameEngine {
     this.phase = 'playing';
   }
 
+  /** Move only the tray (used while the game is frozen behind an overlay). */
+  updateTrayOnly(dtRaw: number) {
+    this.updateTray(Math.min(dtRaw, 1 / 30));
+  }
+
   update(dtRaw: number) {
     const dt = Math.min(dtRaw, 1 / 30);
     this.updateTray(dt);

@@ -5,9 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GLScene } from '../components/GLScene';
 import { Backdrop, CoinIcon, CoinPill, GameButton, IconButton, Panel, styles as ui } from '../components/ui';
 import { ballSkin, traySkin, UI } from '../data/cosmetics';
-import { BONUS_TEXT, COLOR_OFFSET, GEOMETRY, getLevel, INTRO_TEXT, LEVEL_COUNT, worldOf, type IntroKey } from '../data/levels';
+import { BONUS_TEXT, COLOR_OFFSET, GEOMETRY, getLevel, INTRO_TEXT, LEVEL_COUNT, TRAY_C_MAX, worldOf, type IntroKey } from '../data/levels';
 import { GameEngine, type EngineEvent } from '../game/GameEngine';
-import { GameRenderer } from '../game/three/GameRenderer';
+import { GameRenderer, THUMB_ZONE } from '../game/three/GameRenderer';
 import { AdManager } from '../managers/AdManager';
 import { AudioManager, type Sfx } from '../managers/AudioManager';
 import { Haptics } from '../managers/Haptics';
@@ -44,6 +44,7 @@ interface Result {
 }
 
 const HUD_H = 104;
+const HANDLE_W = 104;
 const COMP_COLORS = [UI.red, UI.blue, UI.yellow];
 
 function hudOf(e: GameEngine): Hud {
@@ -261,7 +262,8 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
   // auto-pause when the app goes to background
   useEffect(() => {
     const sub = AppState.addEventListener('change', (s) => {
-      if (s !== 'active' && overlayRef.current === 'playing') setOverlay('paused');
+      const ov = overlayRef.current;
+      if (s !== 'active' && (ov === 'playing' || (ov === 'ready' && engineRef.current.phase === 'playing'))) setOverlay('paused');
     });
     return () => sub.remove();
   }, [setOverlay]);
@@ -375,6 +377,9 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
 
   // ------------------------------------------------------------------ input
   const dragStart = useRef(0);
+  // drag handle that follows the tray inside the thumb zone
+  const handleX = useRef(new Animated.Value(-500)).current;
+  const handleY = useRef(new Animated.Value(-500)).current;
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -386,7 +391,13 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
       onPanResponderMove: (_, g) => {
         const ppw = rendRef.current?.ptsPerWorld ?? 40;
         // horizontal only — vertical finger motion is ignored entirely
-        engineRef.current.setTrayTarget(dragStart.current + g.dx / ppw);
+        const d = g.dx / ppw;
+        const raw = dragStart.current + d;
+        // At a wall, re-anchor so finger travel past the wall is not "stored":
+        // moving back responds immediately instead of after a dead zone.
+        if (raw > TRAY_C_MAX) dragStart.current = TRAY_C_MAX - d;
+        else if (raw < -TRAY_C_MAX) dragStart.current = -TRAY_C_MAX - d;
+        engineRef.current.setTrayTarget(dragStart.current + d);
       },
     }),
   ).current;
@@ -437,6 +448,13 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
   // Leaving or restarting from the pause menu is not a finished level: no ad.
   const leave = (to: 'home' | 'levels') => (overlay === 'paused' ? onExit(to) : afterBreak(() => onExit(to)));
   const restartFromPause = () => startLevel(levelId);
+  // Resume goes through a short READY banner (balls frozen) so a hitch while
+  // the pause panel closes never costs the player a ball.
+  const resumes = useRef(0);
+  const resume = () => {
+    resumes.current++;
+    setOverlay('ready');
+  };
 
   const watchForBonusLife = async () => {
     if (adBusy) return;
@@ -470,14 +488,20 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
             frame: (dt) => {
               const e = engineRef.current;
               const ov = overlayRef.current;
-              const paused = ov === 'paused';
-              if (!paused) e.update(dt);
+              // Paused, or the short READY banner after Resume / a rewarded continue:
+              // balls stay frozen, only the tray follows the finger.
+              const paused = ov === 'paused' || (ov !== 'playing' && e.phase === 'playing');
+              if (paused) e.updateTrayOnly(dt);
+              else e.update(dt);
               const events = e.drainEvents();
               if (events.length) {
                 r.handleEvents(events, e);
                 handleRef.current(events);
               }
               r.sync(e, paused ? 0 : dt);
+              const hp = r.handlePoint(e.trayX);
+              handleX.setValue(hp.x - HANDLE_W / 2);
+              handleY.setValue(hp.y + THUMB_ZONE * 0.42);
               r.render();
             },
             dispose: () => {
@@ -487,6 +511,13 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
           };
         }}
       />
+
+      {/* drag handle under the tray: shows where to rest the finger */}
+      <Animated.View pointerEvents="none" style={[styles.handle, { transform: [{ translateX: handleX }, { translateY: handleY }] }]}>
+        <Text style={styles.handleArrow}>‹</Text>
+        <View style={styles.handleGrip} />
+        <Text style={styles.handleArrow}>›</Text>
+      </Animated.View>
 
       {/* touch surface: drag anywhere to move the tray */}
       <View style={StyleSheet.absoluteFill} {...pan.panHandlers} />
@@ -517,7 +548,7 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
         <FloatText key={p.id} p={p} onDone={removePopup} />
       ))}
 
-      {overlay === 'ready' && <ReadyBanner key={`${levelId}-${eng.continuesUsed}`} bonus={BONUS_TEXT[level.bonus.type](level.bonus.count)} />}
+      {overlay === 'ready' && <ReadyBanner key={`${levelId}-${eng.continuesUsed}-${resumes.current}`} bonus={BONUS_TEXT[level.bonus.type](level.bonus.count)} />}
 
       {overlay === 'intro' && intro && (
         <Backdrop>
@@ -549,7 +580,7 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
             <Text style={[ui.body, { marginBottom: 14 }]}>
               Level {level.id} · World {worldOf(level.id).name}
             </Text>
-            <GameButton title="Resume" icon="play" shade="green" style={styles.fullBtn} onPress={() => setOverlay('playing')} />
+            <GameButton title="Resume" icon="play" shade="green" style={styles.fullBtn} onPress={resume} />
             <GameButton title="Restart" icon="refresh" shade="blue" disabled={adBusy} style={styles.fullBtn} onPress={restartFromPause} />
             {rewardedReady && !eng.bonusLifeUsed && eng.phase === 'playing' && (
               <GameButton title="+1 Life" subtitle="Watch a short ad" icon="heart" shade="purple" size="sm" disabled={adBusy} style={styles.fullBtn} onPress={watchForBonusLife} />
@@ -630,6 +661,9 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#b9a8ff' },
   vignette: { backgroundColor: '#ff4d6d' },
+  handle: { position: 'absolute', left: 0, top: 0, width: HANDLE_W, height: 30, marginTop: -15, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.45)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.85)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 },
+  handleGrip: { width: 34, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.95)' },
+  handleArrow: { color: '#fff', fontSize: 22, fontWeight: '900', lineHeight: 24, textShadowColor: 'rgba(43,35,80,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 0 },
   hud: { position: 'absolute', left: 0, right: 0, top: 0, paddingHorizontal: 14 },
   hudRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   hudCenter: { flex: 1, marginHorizontal: 12, alignItems: 'center' },

@@ -45,3 +45,6 @@ yarn-error.*
 
 # python
 __pycache__/
+
+# screenshot harness build output
+tools/screenshots/.build/

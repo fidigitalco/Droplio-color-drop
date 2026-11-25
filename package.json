@@ -38,7 +38,8 @@
     "typecheck": "tsc --noEmit",
     "playtest": "tsc --ignoreConfig --outDir .playtest --rootDir . --module commonjs --target es2020 --resolveJsonModule --esModuleInterop --skipLibCheck src/game/GameEngine.ts && cp src/data/levels.json .playtest/src/data/ && node tools/bot_playtest.js",
     "logo": "python3 tools/generate_logo.py",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "screenshots": "tools/screenshots/render.sh"
   },
   "private": true,
   "engines": {

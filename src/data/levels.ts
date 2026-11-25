@@ -95,9 +95,9 @@ export function worldOf(id: number): WorldInfo {
 }
 
 export const INTRO_TEXT: Record<IntroKey, { title: string; body: string }> = {
-  basics: { title: 'Drag to move', body: 'Slide one finger left and right. Catch each ball in the compartment of the same color.' },
+  basics: { title: 'Drag to move', body: 'Slide one finger left and right below the tray, so you can always see the balls. Catch each ball in the compartment of the same color.' },
   three_colors: { title: 'Three colors', body: 'Red, blue and yellow now. Keep an eye on which compartment is under each ball.' },
-  golden: { title: 'Golden balls', body: 'Catch golden balls in any compartment for bonus coins. Missing one costs nothing.' },
+  golden: { title: 'Golden coins', body: 'Spinning golden coins fit ANY compartment — catch them for bonus coins. Missing one costs nothing.' },
   slow: { title: 'Slow balls', body: 'Balls with a white ring fall slowly. Do not let them trick your timing.' },
   rainbow: { title: 'Rainbow balls', body: 'Rainbow balls fit every compartment and count toward your goal.' },
   bomb: { title: 'Bombs!', body: 'Dark bombs must be avoided. Move the tray out of their way.' },
@@ -109,7 +109,7 @@ export const INTRO_TEXT: Record<IntroKey, { title: string; body: string }> = {
 
 export const BONUS_TEXT: Record<BonusType, (n: number) => string> = {
   perfect: () => 'No mistakes',
-  golden: (n) => `Catch ${n} golden`,
+  golden: (n) => `Catch ${n} golden coins`,
   combo: (n) => `Reach a ${n} combo`,
   rainbow: (n) => `Catch ${n} rainbow`,
 };

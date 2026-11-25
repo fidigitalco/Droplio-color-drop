@@ -25,12 +25,12 @@ export const USE_PRODUCTION_ADS = true;
 
 export const PRODUCTION_AD_UNITS = {
   ios: {
-    rewarded: 'ca-app-pub-2161868508556527/9019392198',
-    interstitial: 'ca-app-pub-2161868508556527/4094368574',
+    rewarded: 'ca-app-pub-2895326830651551/2345954434',
+    interstitial: 'ca-app-pub-2895326830651551/8775757721',
   },
   android: {
-    rewarded: 'ca-app-pub-XXXXXXXXXXXXXXXX/REWARDED_ANDROID',
-    interstitial: 'ca-app-pub-XXXXXXXXXXXXXXXX/INTERSTITIAL_ANDROID',
+    rewarded: 'ca-app-pub-2895326830651551/3020421054',
+    interstitial: 'ca-app-pub-2895326830651551/4540999241',
   },
 };
 

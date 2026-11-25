@@ -16,7 +16,7 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "appleTeamId": "487J3W7W6Q",
-      "buildNumber": "2"
+      "buildNumber": "3"
     },
     "android": {
       "package": "com.droplio.game",
@@ -26,7 +26,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -37,9 +40,12 @@
       [
         "react-native-google-mobile-ads",
         {
-          "iosAppId": "ca-app-pub-2161868508556527~1198284485",
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
-          "delayAppMeasurementInit": true
+          "iosAppId": "ca-app-pub-2895326830651551~9585829401",
+          "androidAppId": "ca-app-pub-2895326830651551~2920669504",
+          "delayAppMeasurementInit": true,
+          "skAdNetworkItems": [
+            "cstr6suwn9.skadnetwork"
+          ]
         }
       ],
       "expo-font",

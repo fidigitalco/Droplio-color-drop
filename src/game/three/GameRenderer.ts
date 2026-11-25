@@ -49,6 +49,8 @@ interface Compartment {
 }
 
 const FOV = 36;
+/** Free strip under the tray (points) where the finger rests without hiding balls. */
+export const THUMB_ZONE = 84;
 const FLOOR_THICK = 0.4;
 const DEPTH = 1.5;
 const RED_SOFT = new THREE.Color('#ff6b6b');
@@ -67,6 +69,10 @@ export class GameRenderer {
   private ringGeo = new THREE.TorusGeometry(G.ballR * 1.28, 0.055, 8, 36);
   private fuseGeo = new THREE.CylinderGeometry(0.05, 0.07, 0.3, 8);
   private planeGeo = new THREE.PlaneGeometry(1, 1);
+  // Golden bonus = a spinning coin with a star, so it never reads as a yellow ball.
+  private coinGeo = new THREE.CylinderGeometry(G.ballR * 1.08, G.ballR * 1.08, 0.2, 40).rotateX(Math.PI / 2);
+  private starGeo = starShape(G.ballR * 0.62, G.ballR * 0.27);
+  private starMat = new THREE.MeshBasicMaterial({ color: 0xfff6cf, side: THREE.DoubleSide });
 
   private colorMats: THREE.MeshMatcapMaterial[];
   private goldMat: THREE.MeshMatcapMaterial;
@@ -140,7 +146,7 @@ export class GameRenderer {
     const fieldTop = G.spawnY + 1.1;
     const fieldBottom = G.trayFloorY - FLOOR_THICK - 0.35;
     const reservedTop = safeTop + hudH;
-    const reservedBottom = safeBottom + 6;
+    const reservedBottom = safeBottom + 6 + THUMB_ZONE;
     const availFrac = Math.max(0.55, 1 - (reservedTop + reservedBottom) / viewH);
     const visHForField = (fieldTop - fieldBottom) / availFrac;
     const visHForWidth = (G.fieldW + 0.5) / aspect;
@@ -158,6 +164,11 @@ export class GameRenderer {
     const a = this.project(0, G.trayFloorY, 0);
     const b = this.project(1, G.trayFloorY, 0);
     this.ptsPerWorld = Math.max(1, b.x - a.x);
+  }
+
+  /** Screen point just under the tray, centred on it (for the drag handle). */
+  handlePoint(trayX: number) {
+    return this.project(trayX, G.trayFloorY - FLOOR_THICK - 0.35);
   }
 
   /** World position → screen points (for React Native overlays). */
@@ -343,10 +354,16 @@ export class GameRenderer {
     };
 
     switch (b.kind) {
-      case KIND.GOLDEN:
-        body = new THREE.Mesh(this.ballGeo, this.goldMat);
+      case KIND.GOLDEN: {
+        body = new THREE.Mesh(this.coinGeo, this.goldMat);
+        for (const z of [0.102, -0.102]) {
+          const star = new THREE.Mesh(this.starGeo, this.starMat);
+          star.position.z = z;
+          body.add(star);
+        }
         glow = glowOf(GOLD, 2.0, 0.55);
         break;
+      }
       case KIND.RAINBOW:
         body = new THREE.Mesh(this.rainbowGeo, this.rainbowMat);
         glow = glowOf(WHITE, 2.0, 0.45);
@@ -516,7 +533,9 @@ export class GameRenderer {
       if (b.state === 'caught' && b.t2 > 0.5) s = Math.max(0, 1 - (b.t2 - 0.5) / 0.4);
       v.group.scale.setScalar(Math.max(0.01, s));
 
-      v.body.rotation.z += b.spin * dt;
+      // coin wobbles instead of spinning fully, so its star face always shows
+      if (b.kind === KIND.GOLDEN) v.body.rotation.y = Math.sin(this.time * 3.2 + b.id) * 0.75;
+      else v.body.rotation.z += b.spin * dt;
       if (b.kind === KIND.SLOW && v.extra[0]) v.extra[0].rotation.z += dt * 2.5;
       if (b.kind === KIND.BOMB) {
         const spark = v.extra[0];
@@ -609,4 +628,19 @@ export class GameRenderer {
     });
     this.renderer.dispose();
   }
+}
+
+/** Flat 5-point star (XY plane), used as the emblem on golden coins. */
+function starShape(outer: number, inner: number): THREE.ShapeGeometry {
+  const shape = new THREE.Shape();
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outer : inner;
+    const a = Math.PI / 2 + (i * Math.PI) / 5;
+    const x = Math.cos(a) * r;
+    const y = Math.sin(a) * r;
+    if (i === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
+  }
+  shape.closePath();
+  return new THREE.ShapeGeometry(shape);
 }

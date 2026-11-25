@@ -59,6 +59,10 @@ TRAY_HALF = TRAY_W / 2
 FALL_DIST = G["spawnY"] - G["trayRimY"]
 COLOR_OFFSET = [-G["compW"], 0.0, G["compW"]]      # red, blue, yellow compartment offsets
 
+# Global fall-speed factor. The tray sits higher (thumb zone below it), so the
+# field is drawn ~13% smaller; slower falls give the player that reaction time back.
+FALL_EASE = 0.88
+
 # Player model used for fairness checks (deliberately conservative).
 HUMAN_SPEED = 7.0        # world units / second the tray can comfortably travel
 REACTION = 0.30          # seconds to perceive + decide before the player starts moving
@@ -142,7 +146,9 @@ def event_set(kind: int, color: int, x: float) -> Intervals | None:
     if kind in (KIND_NORMAL, KIND_SLOW):
         c = x - COLOR_OFFSET[color]
         return clamp_set([(c - CATCH_TOL, c + CATCH_TOL)])
-    return None  # golden / rainbow are optional bonuses
+    # golden / rainbow are optional, but must always be catchable (any compartment)
+    h = TRAY_HALF - G["ballR"] - 0.1
+    return clamp_set([(x - h, x + h)])
 
 
 @dataclass
@@ -274,7 +280,7 @@ def spec_for(n: int) -> LevelSpec:
         fall = lerp(9.4 + w * 0.45, 10.4 + w * 0.32, k)
         interval = lerp(0.78 - w * 0.03, 0.66 - w * 0.016, k)
         target = round(lerp(40 + w * 4, 52 + w * 3.6, k))
-    fall *= breather
+    fall *= breather * FALL_EASE
     interval /= breather
 
     colors = [0, 1] if n <= 2 else [0, 1, 2]
@@ -351,6 +357,10 @@ def pick_color(rng: random.Random, spec: LevelSpec, history: list[int]) -> int:
 
 
 def try_add(seq: list[Ball], cand: list[Ball], fall_speed: float) -> bool:
+    # validate exactly what will be written to JSON (3-decimal rounding)
+    for b in cand:
+        b.t, b.x, b.speed_mul = round(b.t, 3), round(b.x, 3), round(b.speed_mul, 3)
+        b.drift_amp, b.drift_freq = round(b.drift_amp, 3), round(b.drift_freq, 3)
     ok, _ = validate(seq + cand, fall_speed)
     if ok:
         seq.extend(cand)
@@ -452,6 +462,12 @@ def build_level(spec: LevelSpec) -> LevelSpec:
         b.land, b.land_x = landing(b, spec.fall_speed)
     seq.sort(key=lambda b: b.t)
     spec.balls = seq
+    # The bonus goal must be achievable with the bonus balls this level actually has.
+    kind_for = {"golden": KIND_GOLDEN, "rainbow": KIND_RAINBOW}
+    if spec.bonus["type"] in kind_for:
+        have = sum(1 for b in seq if b.kind == kind_for[spec.bonus["type"]])
+        if have < spec.bonus["count"]:
+            spec.bonus = {"type": "combo", "count": 8 + spec.world * 2}
     return spec
 
 
@@ -488,6 +504,9 @@ def check_file(path: Path) -> int:
         coll = sum(1 for b in balls if b.kind in (KIND_NORMAL, KIND_SLOW))
         if coll < lv["target"]:
             ok, why = False, "not enough collectible balls"
+        bonus_kind = {"golden": KIND_GOLDEN, "rainbow": KIND_RAINBOW}.get(lv["bonus"]["type"])
+        if bonus_kind is not None and sum(1 for b in balls if b.kind == bonus_kind) < lv["bonus"]["count"]:
+            ok, why = False, f"bonus goal needs {lv['bonus']['count']} {lv['bonus']['type']} balls"
         if not ok:
             bad += 1
             print(f"  level {lv['id']:3d}: FAIL {why}")

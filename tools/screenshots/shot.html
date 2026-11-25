@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Droplio screenshot</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@800;900&display=block" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { overflow: hidden; background: #b8a6ff; }
+  #root { position: absolute; left: 0; top: 0; width: 1320px; transform-origin: 0 0; overflow: hidden; font-family: 'Nunito', sans-serif; }
+  .bg { position: absolute; inset: 0; }
+  .bokeh { position: absolute; border-radius: 50%; filter: blur(40px); opacity: .55; }
+  .deco { position: absolute; filter: drop-shadow(0 24px 30px rgba(43,35,80,.28)); }
+  .head { position: absolute; left: 0; right: 0; top: 150px; text-align: center; }
+  .h1 { font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 150px; line-height: 1.0; color: #fff; letter-spacing: 1px;
+        text-shadow: 0 10px 0 rgba(43,35,80,.38); text-transform: uppercase; }
+  .h1 .hl { color: var(--hl, #ffd84a); }
+  .sub { display: inline-block; margin-top: 44px; font-size: 54px; font-weight: 900; color: #2b2350; background: rgba(255,255,255,.92);
+         padding: 16px 44px; border-radius: 60px; box-shadow: 0 10px 0 rgba(43,35,80,.14); }
+  .phone { position: absolute; left: 50%; transform: translateX(-50%); width: 984px; padding: 22px; border-radius: 150px; background: #1d1838;
+           box-shadow: 0 0 0 6px #4b4370 inset, 0 50px 90px rgba(43,35,80,.45); }
+  .screen { position: relative; width: 940px; border-radius: 130px; overflow: hidden; }
+  .vp { position: absolute; left: 0; top: 0; width: 393px; height: 852px; transform-origin: 0 0; }
+  .vp canvas { position: absolute; left: 0; top: 0; width: 393px; height: 852px; }
+  .island { position: absolute; left: 50%; top: 11px; width: 124px; height: 36px; margin-left: -62px; background: #000; border-radius: 20px; z-index: 50; }
+  /* --- in-game HUD (points), mirrors src/screens/GameScreen.tsx styles --- */
+  .hud { position: absolute; left: 0; right: 0; top: 0; padding: 60px 14px 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; }
+  .ibtn { width: 44px; height: 44px; border-radius: 22px; background: linear-gradient(#fff, #eef0ff); box-shadow: 0 4px 0 #c9cbe8, 0 6px 10px rgba(43,35,80,.2);
+          display: flex; align-items: center; justify-content: center; }
+  .center { flex: 1; margin: 0 12px; text-align: center; }
+  .lvl { color: #fff; font-weight: 900; font-size: 15px; letter-spacing: 1px; margin-bottom: 4px; text-shadow: 0 2px 0 rgba(43,35,80,.4); }
+  .bar { position: relative; height: 22px; border-radius: 11px; background: rgba(255,255,255,.55); border: 2px solid rgba(255,255,255,.9); overflow: hidden; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: #25c48a; border-radius: 9px; }
+  .bar b { position: relative; display: block; text-align: center; font-weight: 900; color: #2b2350; font-size: 13px; line-height: 18px; }
+  .pill { display: flex; align-items: center; background: rgba(255,255,255,.92); padding: 0 14px 0 5px; height: 36px; border-radius: 18px; box-shadow: 0 3px 6px rgba(43,35,80,.18); }
+  .pill b { margin-left: 7px; font-size: 17px; font-weight: 900; color: #2b2350; }
+  .coin { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff6c8; background: radial-gradient(circle at 35% 30%, #fffbe0 0 18%, transparent 19%), linear-gradient(#fff1a8, #ffc21a 55%, #e69a00); }
+  .row2 { margin-top: 8px; padding: 0 6px; }
+  .hearts svg { margin-right: 2px; filter: drop-shadow(0 2px 0 rgba(43,35,80,.35)); }
+  .score { color: #fff; font-weight: 900; font-size: 20px; text-shadow: 0 2px 0 rgba(43,35,80,.4); }
+  .combo { background: #ff7a2f; padding: 3px 10px; border-radius: 12px; min-width: 48px; text-align: center; color: #fff; font-weight: 900; font-size: 15px; }
+  .popup { position: absolute; width: 200px; margin-left: -100px; text-align: center; font-size: 26px; font-weight: 900; text-shadow: 0 2px 0 rgba(43,35,80,.5); }
+  /* drag handle under the tray (mirrors styles.handle in GameScreen) */
+  .handle { position: absolute; width: 104px; height: 30px; margin: -15px 0 0 -52px; border-radius: 15px; background: rgba(255,255,255,.45); border: 2px solid rgba(255,255,255,.85);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 12px; color: #fff; font-size: 22px; font-weight: 900; line-height: 24px; }
+  .handle i { width: 34px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.95); }
+  .touch { position: absolute; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; background: rgba(255,255,255,.5); border: 4px solid #fff; box-shadow: 0 0 0 10px rgba(255,255,255,.25); }
+  /* panels */
+  .backdrop { position: absolute; inset: 0; background: rgba(43,35,80,.45); display: flex; align-items: center; justify-content: center; }
+  .panel { width: 86%; background: #fff; border-radius: 32px; padding: 24px; text-align: center; box-shadow: 0 12px 24px rgba(43,35,80,.3); }
+  .ptitle { font-size: 30px; font-weight: 900; color: #2b2350; }
+  .stars { display: flex; justify-content: center; align-items: flex-end; margin: 8px 0; gap: 8px; }
+  .big { font-size: 40px; font-weight: 900; color: #2b2350; }
+  .bonus { margin-top: 6px; font-weight: 800; color: #6b6390; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .coinrow { display: inline-flex; align-items: center; background: #fff4d1; padding: 8px 18px; border-radius: 20px; margin: 10px 0; }
+  .coinrow b { margin-left: 8px; font-size: 26px; font-weight: 900; color: #2b2350; }
+  .btn { margin-top: 10px; border-radius: 22px; padding: 13px 0 15px; color: #fff; font-weight: 900; font-size: 22px; letter-spacing: .5px; text-shadow: 0 2px 0 rgba(0,0,0,.18); }
+  .btn.green { background: linear-gradient(#5ef0a8, #22c27f); box-shadow: 0 6px 0 #139360, 0 10px 14px rgba(43,35,80,.25); }
+  .btn.purple { background: linear-gradient(#b79bff, #7c5cff); box-shadow: 0 6px 0 #5638d6, 0 10px 14px rgba(43,35,80,.25); font-size: 18px; padding: 9px 0 10px; }
+  .btn small { display: block; font-size: 12px; font-weight: 800; opacity: .85; }
+  .iconrow { display: flex; justify-content: center; gap: 14px; margin-top: 18px; }
+  /* collection */
+  .coll { position: absolute; inset: 0; background: linear-gradient(#8fd3ff, #b8a6ff 50%, #ffc4e1); padding-top: 62px; }
+  .chead { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  .ctitle { font-size: 28px; font-weight: 900; color: #fff; text-shadow: 0 3px 0 rgba(43,35,80,.35); }
+  .note { text-align: center; margin-top: 10px; color: #2b2350; font-weight: 700; opacity: .7; font-size: 14px; }
+  .tabs { display: flex; justify-content: center; margin-top: 14px; gap: 12px; }
+  .tab { background: rgba(255,255,255,.8); padding: 0 26px; height: 40px; line-height: 40px; border-radius: 20px; font-weight: 900; color: #2b2350; font-size: 16px; }
+  .tab.on { background: #7c5cff; color: #fff; }
+  .card { display: flex; align-items: center; background: #fff; margin: 12px 16px 0; padding: 14px; border-radius: 22px; box-shadow: 0 4px 10px rgba(43,35,80,.12); border: 3px solid transparent; }
+  .card.sel { border-color: #25c48a; }
+  .card img { width: 40px; height: 40px; margin-right: -4px; }
+  .card .nm { flex: 1; margin-left: 14px; font-weight: 900; font-size: 18px; color: #2b2350; }
+  .card .nm small { display: block; font-size: 13px; font-weight: 700; color: #6b6390; }
+  .price { display: flex; align-items: center; background: #fff4d1; padding: 5px 12px; border-radius: 14px; font-weight: 900; color: #2b2350; gap: 6px; }
+  .use { font-weight: 900; color: #7c5cff; font-size: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src=".build/bundle.js"></script>
+<script>
+const Q = new URLSearchParams(location.search);
+const W = +Q.get('w') || 1320, H = +Q.get('h') || 2868, N = +Q.get('n') || 1;
+const DH = Math.round(H * 1320 / W);
+const root = document.getElementById('root');
+root.style.height = DH + 'px';
+root.style.transform = `scale(${W / 1320})`;
+
+const heart = (on) => `<svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.2 3 4.5 6.7 4.5c2.1 0 3.9 1.2 5.3 3 1.4-1.8 3.2-3 5.3-3 3.7 0 5.8 3.7 4.3 7.2C19.5 16.4 12 21 12 21z" fill="${on ? '#ff3b6b' : 'none'}" stroke="${on ? '#ff3b6b' : 'rgba(255,255,255,.85)'}" stroke-width="2.2"/></svg>`;
+const star = (size, on, rot) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="transform:rotate(${rot}deg);filter:drop-shadow(0 3px 0 ${on ? '#c77d00' : '#c9c5df'})"><path d="M12 1.8l3.1 6.6 7.2.9-5.3 5 1.4 7.1L12 17.9l-6.4 3.5L7 14.3 1.7 9.3l7.2-.9z" fill="${on ? '#ffb800' : '#e4e1f3'}" stroke="${on ? '#ffb800' : '#e4e1f3'}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+const icon = {
+  pause: `<svg width="20" height="20" viewBox="0 0 20 20"><rect x="4" y="3" width="4.5" height="14" rx="2" fill="#2b2350"/><rect x="11.5" y="3" width="4.5" height="14" rx="2" fill="#2b2350"/></svg>`,
+  back: `<svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8" stroke="#2b2350" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  refresh: `<svg width="22" height="22" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5" stroke="#2b2350" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  grid: `<svg width="20" height="20" viewBox="0 0 20 20"><g fill="#2b2350"><rect x="2" y="2" width="7" height="7" rx="2"/><rect x="11" y="2" width="7" height="7" rx="2"/><rect x="2" y="11" width="7" height="7" rx="2"/><rect x="11" y="11" width="7" height="7" rx="2"/></g></svg>`,
+  home: `<svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 11l9-7.5 9 7.5v9.5a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" fill="#2b2350"/></svg>`,
+  check: `<svg width="30" height="30" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#25c48a"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  lock: `<svg width="22" height="22" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="12" rx="3" fill="#6b6390"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#6b6390" stroke-width="3" fill="none"/></svg>`,
+};
+
+// Each game shot is a real frame of the game, found by playing the level with a bot.
+const SHOTS = {
+  1: { bg: ['#6fc0ff', '#a88bff', '#ff9fcf'], h: 'Catch the<br><span class="hl">Colors!</span>', sub: 'Relaxing 3D color-match fun', game: { levelId: 120, seconds: 18, minVisible: 4 }, popups: true },
+  2: { bg: ['#ff9fc4', '#b28bff', '#7cc8ff'], h: 'One finger<br><span class="hl">to play</span>', sub: 'Slide the tray · match every drop', game: { levelId: 96, seconds: 9, minVisible: 3 }, touch: true },
+  3: { bg: ['#ffcf5a', '#ff8fb5', '#a88bff'], hl: '#fff3a0', h: 'Golden coins &amp;<br><span class="hl">Rainbow</span> balls', sub: 'Bonus coins &amp; big combos', game: { levelId: 111, seconds: 6, needKind: [2], minVisible: 2 } },
+  4: { bg: ['#5b6bff', '#9b7bff', '#ff8fb5'], hl: '#ffd84a', h: 'Dodge the<br><span class="hl">Bombs!</span>', sub: 'Stay sharp in the Bomb Zone', game: { levelId: 175, seconds: 12, needKind: [4], minVisible: 3 } },
+  5: { bg: ['#4fd6a8', '#6fc0ff', '#a88bff'], hl: '#ffd84a', h: '300 levels<br><span class="hl">10 worlds</span>', sub: 'Earn stars, coins &amp; rewards', game: { levelId: 42, seconds: 999 }, victory: true },
+  6: { bg: ['#a88bff', '#ff8fb5', '#ffcf5a'], hl: '#fff3a0', h: 'Unlock<br><span class="hl">shiny skins</span>', sub: 'Candy · Pearl · Chrome · Crystal', collection: true },
+};
+const S = SHOTS[N];
+root.style.setProperty('--hl', S.hl || '#ffd84a');
+
+root.insertAdjacentHTML('beforeend', `<div class="bg" style="background:linear-gradient(170deg, ${S.bg[0]} 0%, ${S.bg[1]} 52%, ${S.bg[2]} 100%)"></div>`);
+[[80, 520, 360, '#fff'], [1100, 330, 300, '#fff3c4'], [1180, 1500, 420, '#ffe3f1'], [-60, 2100, 460, '#d9f1ff'], [700, 2600, 380, '#fff']].forEach(([x, y, r, c]) =>
+  root.insertAdjacentHTML('beforeend', `<div class="bokeh" style="left:${x - r / 2}px;top:${y - r / 2}px;width:${r}px;height:${r}px;background:${c}"></div>`));
+
+const PAL = ['#ff3b5c', '#2f7bff', '#ffc812'];
+const decos = { 1: [[40, 760, 170, 0], [1130, 1180, 150, 1], [60, 1900, 130, 2], [1150, 2380, 180, 0]],
+                2: [[1120, 760, 150, 2], [30, 1500, 140, 1]],
+                3: [[1130, 1700, 150, 'rainbow']],
+                4: [[1140, 780, 140, 0], [40, 2300, 150, 1]],
+                5: [[40, 800, 150, 2], [1140, 1900, 160, 0]],
+                6: [[30, 780, 160, 1], [1140, 1400, 150, 2], [40, 2350, 140, 0]] }[N] || [];
+for (const [x, y, s, c] of decos) {
+  const url = c === 'rainbow' ? ballURL('rainbow') : ballURL(PAL[c], 'glossy');
+  root.insertAdjacentHTML('beforeend', `<img class="deco" src="${url}" style="left:${x - s / 2}px;top:${y - s / 2}px;width:${s}px;height:${s}px;z-index:${y > 1000 ? 5 : 1}">`);
+}
+
+root.insertAdjacentHTML('beforeend', `<div class="head"><div class="h1">${S.h}</div><div class="sub">${S.sub}</div></div>`);
+
+const PHONE_TOP = 700;
+const SCR_W = 940, SCR_H = Math.round(940 * 852 / 393);
+root.insertAdjacentHTML('beforeend', `<div class="phone" style="top:${PHONE_TOP}px"><div class="screen" style="height:${SCR_H}px"><div class="island"></div><div class="vp" id="vp" style="transform:scale(${SCR_W / 393})"></div></div></div>`);
+const vp = document.getElementById('vp');
+
+function hudHTML(h) {
+  return `<div class="hud">
+    <div class="row">
+      <div class="ibtn">${icon.pause}</div>
+      <div class="center"><div class="lvl">LEVEL ${h.level}</div>
+        <div class="bar"><i style="width:${Math.min(100, 100 * h.progress / h.target)}%"></i><b>${h.progress}/${h.target}</b></div></div>
+      <div class="pill"><div class="coin"></div><b>${(1240 + h.coins).toLocaleString()}</b></div>
+    </div>
+    <div class="row row2">
+      <div class="hearts">${Array.from({ length: h.maxLives }, (_, i) => heart(i < h.lives)).join('')}</div>
+      <div class="score">${h.score.toLocaleString()}</div>
+      <div class="combo" style="opacity:${h.combo >= 3 ? 1 : 0}">×${h.combo}</div>
+    </div></div>`;
+}
+
+if (S.game) {
+  const cv = document.createElement('canvas');
+  cv.width = 1179; cv.height = 2556;
+  vp.appendChild(cv);
+  const h = renderGame(cv, { viewW: 393, viewH: 852, safeTop: 54, safeBottom: 20, hudH: 104, ...S.game });
+  if (S.victory) h.progress = h.target;
+  vp.insertAdjacentHTML('beforeend', hudHTML(h));
+  const hx = h.handlePt.x, hy = h.handlePt.y + 84 * 0.42; // THUMB_ZONE * 0.42, as in GameScreen
+  vp.insertAdjacentHTML('beforeend', `<div class="handle" style="left:${hx}px;top:${hy}px"><span>‹</span><i></i><span>›</span></div>`);
+  if (S.popups) vp.insertAdjacentHTML('beforeend', `<div class="popup" style="left:${h.trayPt.x}px;top:${h.trayPt.y - 150}px;color:#fff">+${10 * Math.max(1, h.combo)}</div>`);
+  if (S.touch) vp.insertAdjacentHTML('beforeend', `<div class="touch" style="left:${hx}px;top:${hy}px"></div>`);
+  if (S.victory) {
+    vp.insertAdjacentHTML('beforeend', `<div class="backdrop"><div class="panel">
+      <div class="ptitle">Level Complete!</div>
+      <div class="stars">${star(50, true, -12)}<div style="margin-bottom:14px">${star(64, true, 0)}</div>${star(50, true, 12)}</div>
+      <div class="big">${h.score.toLocaleString()}</div>
+      <div class="bonus">${icon.check.replace(/30/g, '20')} Bonus: No mistakes +15</div>
+      <div class="coinrow"><div class="coin" style="width:28px;height:28px"></div><b>+45</b></div>
+      <div class="btn green">Continue →</div>
+      <div class="btn purple">Double coins<small>Watch a short ad</small></div>
+      <div class="iconrow"><div class="ibtn">${icon.refresh}</div><div class="ibtn">${icon.grid}</div><div class="ibtn">${icon.home}</div></div>
+    </div></div>`);
+  }
+}
+
+if (S.collection) {
+  const rows = BALL_SKINS.map((s, i) => {
+    const balls = s.palette.map((c) => `<img src="${ballURL(c, s.style, 160)}">`).join('');
+    const right = i === 0 ? '<span class="use">USE</span>' : i === 2 ? icon.check : i === 4 ? icon.lock : `<div class="price"><div class="coin" style="width:18px;height:18px"></div>${s.cost}</div>`;
+    const subtitle = i === 4 ? `<small>Reach level ${s.unlockLevel}</small>` : '';
+    return `<div class="card ${i === 2 ? 'sel' : ''}">${balls}<div class="nm">${s.name}${subtitle}</div>${right}</div>`;
+  }).join('');
+  vp.insertAdjacentHTML('beforeend', `<div class="coll">
+    <div class="chead"><div class="ibtn">${icon.back}</div><div class="ctitle">Collection</div><div class="pill"><div class="coin"></div><b>2,480</b></div></div>
+    <div class="note">Skins are purely cosmetic</div>
+    <div class="tabs"><div class="tab on">Balls</div><div class="tab">Trays</div></div>
+    ${rows}</div>`);
+}
+</script>
+</body>
+</html>
