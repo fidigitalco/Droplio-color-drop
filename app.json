@@ -29,7 +29,8 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "com.google.android.gms.permission.AD_ID"
-      ]
+      ],
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -57,7 +58,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#a98bff"
         }
-      ]
+      ],
+      "./plugins/withDisableAndroidMinify",
+      "./plugins/withAndroidReleaseSigning"
     ]
   }
 }
