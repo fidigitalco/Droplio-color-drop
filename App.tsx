@@ -4,6 +4,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SimulatedAdOverlay } from './src/components/SimulatedAdOverlay';
 import { AdManager } from './src/managers/AdManager';
+import { Analytics } from './src/managers/Analytics';
 import { AudioManager } from './src/managers/AudioManager';
 import { CollectionScreen } from './src/screens/CollectionScreen';
 import { GameScreen } from './src/screens/GameScreen';
@@ -21,6 +22,7 @@ function Root() {
     AudioManager.init().then(() => AudioManager.startMusic());
     // Consent + ad SDK init happens in the background; gameplay never waits for it.
     AdManager.init();
+    Analytics.init();
   }, []);
 
   if (!ready) {

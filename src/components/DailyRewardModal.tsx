@@ -29,7 +29,7 @@ export function DailyRewardModal({ status, onClose }: { status: DailyStatus; onC
   const claimDouble = async () => {
     if (busy) return;
     setBusy(true);
-    const earned = await AdManager.showRewarded();
+    const earned = await AdManager.showRewarded('daily_double');
     setBusy(false);
     claim(earned ? 2 : 1);
   };

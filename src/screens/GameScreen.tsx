@@ -9,6 +9,7 @@ import { BONUS_TEXT, COLOR_OFFSET, GEOMETRY, getLevel, INTRO_TEXT, LEVEL_COUNT, 
 import { GameEngine, type EngineEvent } from '../game/GameEngine';
 import { GameRenderer, THUMB_ZONE } from '../game/three/GameRenderer';
 import { AdManager } from '../managers/AdManager';
+import { Analytics } from '../managers/Analytics';
 import { AudioManager, type Sfx } from '../managers/AudioManager';
 import { Haptics } from '../managers/Haptics';
 import { computeReward, type RewardBreakdown } from '../managers/RewardManager';
@@ -259,6 +260,7 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
       engineRef.current = new GameEngine(lv);
       rendRef.current?.clearBalls();
       setLevelId(id);
+      Analytics.track('level_start', { level: id });
       setHud(hudOf(engineRef.current));
       setResult(null);
       setPopups([]);
@@ -310,6 +312,7 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
     const prevBest = st.save.bestScores[String(id)] ?? 0;
     const reward = computeReward(eng.level, { stars, score: eng.score, bonusAchieved: bonus, pickedCoins: eng.coinsEarned }, first);
     st.recordWin(id, stars, eng.score, reward.total);
+    Analytics.track('level_complete', { level: id, stars, score: eng.score, first });
     setResult({ stars, score: eng.score, bonus, reward, doubled: false, prevBest });
     setOverlay('won');
     AudioManager.play('win');
@@ -385,6 +388,7 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
         case 'lost':
           hudDirty = true;
           AudioManager.play('lose');
+          Analytics.track('level_fail', { level: latest.current.levelId, score: eng.score });
           latest.current.store.update((p) => ({ ...p, levelsSinceInterstitial: p.levelsSinceInterstitial + 1 }));
           later(() => setOverlay('lost'), 750);
           break;
@@ -428,7 +432,7 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
   const watchForLife = async () => {
     if (adBusy) return;
     setAdBusy(true);
-    const earned = await AdManager.showRewarded();
+    const earned = await AdManager.showRewarded('extra_life');
     setAdBusy(false);
     if (earned) {
       engineRef.current.continueWithExtraLife();
@@ -440,7 +444,7 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
   const watchForDouble = async () => {
     if (adBusy || !result || result.doubled) return;
     setAdBusy(true);
-    const earned = await AdManager.showRewarded();
+    const earned = await AdManager.showRewarded('double_coins');
     setAdBusy(false);
     if (earned) {
       store.addCoins(result.reward.total);
@@ -481,7 +485,7 @@ export function GameScreen({ initialLevel, onExit }: { initialLevel: number; onE
   const watchForBonusLife = async () => {
     if (adBusy) return;
     setAdBusy(true);
-    const earned = await AdManager.showRewarded();
+    const earned = await AdManager.showRewarded('bonus_life');
     setAdBusy(false);
     if (earned && engineRef.current.addBonusLife()) {
       setHud(hudOf(engineRef.current));

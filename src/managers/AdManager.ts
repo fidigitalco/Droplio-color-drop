@@ -10,6 +10,7 @@
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { AD_POLICY } from '../config/ads';
 import type { AdProvider } from './ads/AdProvider';
+import { Analytics } from './Analytics';
 import { SimulatedAdProvider } from './ads/SimulatedAdProvider';
 
 export const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
@@ -46,17 +47,24 @@ class AdManagerImpl {
     return !this.fullscreenOpen && this.provider.isRewardedReady();
   }
 
-  /** true only when the reward was earned. Never throws. */
-  async showRewarded(): Promise<boolean> {
-    if (this.fullscreenOpen || !this.provider.isRewardedReady()) return false;
-    this.fullscreenOpen = true;
-    try {
-      return await this.provider.showRewarded();
-    } catch {
+  /** true only when the reward was earned. Never throws. `placement` is for stats. */
+  async showRewarded(placement = 'other'): Promise<boolean> {
+    Analytics.track('ad_offered', { placement });
+    if (this.fullscreenOpen || !this.provider.isRewardedReady()) {
+      Analytics.track('ad_failed', { placement, reason: 'unavailable' });
       return false;
+    }
+    this.fullscreenOpen = true;
+    let earned = false;
+    try {
+      earned = await this.provider.showRewarded();
+    } catch {
+      earned = false;
     } finally {
       this.fullscreenOpen = false;
     }
+    Analytics.track(earned ? 'ad_completed' : 'ad_failed', earned ? { placement } : { placement, reason: 'skipped' });
+    return earned;
   }
 
   /**
@@ -80,6 +88,7 @@ class AdManagerImpl {
     try {
       await this.provider.showInterstitial();
       this.lastInterstitialAt = Date.now();
+      Analytics.track('interstitial_shown');
       return true;
     } catch {
       return false;
